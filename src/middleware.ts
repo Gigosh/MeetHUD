@@ -6,9 +6,20 @@ export async function middleware(request: NextRequest) {
     request,
   });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If env vars are missing or placeholders during deployment, skip auth checks
+  // to avoid 500 errors. The pages themselves will redirect to login as needed.
+  if (!supabaseUrl || !supabaseAnonKey || 
+      supabaseUrl === "placeholder.supabase.co" ||
+      supabaseAnonKey === "placeholder-anon-key") {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -48,3 +59,7 @@ export async function middleware(request: NextRequest) {
 
   return supabaseResponse;
 }
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest).*)"],
+};
